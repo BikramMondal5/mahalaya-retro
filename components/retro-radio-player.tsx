@@ -18,6 +18,15 @@ const mahalayaSongs: Song[] = [
   { id: 1, title: "Ya Devi Sarva Bhuteshu", artist: "Birendra Krishna Bhadra", duration: "4:32", src: "/audio/mahalaya-song1.mpeg" },
   { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15", src: "/audio/mahalaya-song2.mpeg" },
   { id: 3, title: "Chandipath", artist: "Birendra Krishna Bhadra", duration: "8:45", src: "/audio/mahalaya-song3.mpeg" },
+  { id: 4, title: "Aigiri Nandini", artist: "Classical Devotional", duration: "5:20", src: "/audio/mahalaya-song4.mpeg" },
+  { id: 5, title: "Durga Stotram", artist: "Birendra Krishna Bhadra", duration: "7:30", src: "/audio/mahalaya-song5.mpeg" },
+  { id: 6, title: "Sarva Mangala Mangalye", artist: "Traditional", duration: "3:45", src: "/audio/mahalaya-song6.mpeg" },
+  { id: 7, title: "Jaya Jaya He Mahishasura Mardini", artist: "Classical", duration: "6:40", src: "/audio/mahalaya-song7.mpeg" },
+  { id: 8, title: "Devi Suktam", artist: "Vedic Chants", duration: "5:55", src: "/audio/mahalaya-song8.mpeg" },
+  { id: 9, title: "Durga Chalisa", artist: "Devotional", duration: "7:15", src: "/audio/mahalaya-song9.mpeg" },
+  { id: 10, title: "Shailaputri Vandana", artist: "Devotional", duration: "4:50", src: "/audio/mahalaya-song10.mpeg" },
+  { id: 11, title: "Brahmacharini Stotram", artist: "Traditional", duration: "5:10", src: "/audio/mahalaya-song11.mpeg" },
+  { id: 12, title: "Chandraghanta Stuti", artist: "Classical Devotional", duration: "6:05", src: "/audio/mahalaya-song12.mpeg" },
 ]
 
 export function RetroRadioPlayer() {
@@ -167,8 +176,11 @@ export function RetroRadioPlayer() {
 
   useEffect(() => {
     // Calculate the index of the song based on the tuning position
-    // For more precise control, map the entire tuning range to the available songs
+    // With more songs, we need to ensure they're evenly distributed across the tuning range
     const songCount = mahalayaSongs.length;
+    
+    // Create a more precise mapping of tuning value to song index
+    // This creates small "station zones" on the tuning dial for each song
     const stationIndex = Math.floor((tuning[0] / 100) * songCount);
     const clampedIndex = Math.min(stationIndex, songCount - 1);
     
@@ -177,14 +189,22 @@ export function RetroRadioPlayer() {
       
       // Update audio source when tuning changes
       if (audioRef.current) {
-        const wasPlaying = !audioRef.current.paused;
         audioRef.current.src = mahalayaSongs[clampedIndex].src;
         
-        // Only start playing if it was already playing or in landscape mode during dragging
-        if (wasPlaying || (isLandscape && isDragging && isPlaying)) {
-          audioRef.current.play().catch(error => {
-            console.error("Error playing audio after tuning:", error);
-          });
+        // Always play when tuning changes if the radio is on,
+        // or if in landscape mode and dragging while the radio is on
+        if (isPlaying || (isLandscape && isDragging)) {
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Error playing audio after tuning:", error);
+            });
+          }
+          
+          // Update the playing state if needed
+          if (!isPlaying) {
+            setIsPlaying(true);
+          }
         }
       }
     }
@@ -364,40 +384,58 @@ export function RetroRadioPlayer() {
   const nextSong = () => {
     const nextIndex = (currentSong + 1) % mahalayaSongs.length;
     setCurrentSong(nextIndex);
+    
+    // Calculate tuning position based on the song index
+    // With 12 songs, each song occupies about 8.33% of the tuning range
     const newTuningValue = mahalayaSongs.length > 1 ? 
       (nextIndex / (mahalayaSongs.length - 1)) * 100 : 50;
+    
+    // Update tuning UI
     setTuning([newTuningValue]);
     setTuningKnobRotation((newTuningValue / 100) * 360);
     
-    // Update audio source and play if it was already playing
+    // Always play the next song when user explicitly changes songs, regardless of previous state
     if (audioRef.current) {
-      const wasPlaying = !audioRef.current.paused;
       audioRef.current.src = mahalayaSongs[nextIndex].src;
-      if (wasPlaying) {
-        audioRef.current.play().catch(error => {
+      // Force play the next song
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
           console.error("Error playing next song:", error);
         });
       }
+      
+      // Always set playing state to true when changing songs
+      setIsPlaying(true);
     }
   }
 
   const prevSong = () => {
     const prevIndex = (currentSong - 1 + mahalayaSongs.length) % mahalayaSongs.length;
     setCurrentSong(prevIndex);
+    
+    // Calculate tuning position based on the song index
+    // With 12 songs, each song occupies about 8.33% of the tuning range
     const newTuningValue = mahalayaSongs.length > 1 ? 
       (prevIndex / (mahalayaSongs.length - 1)) * 100 : 50;
+    
+    // Update tuning UI
     setTuning([newTuningValue]);
     setTuningKnobRotation((newTuningValue / 100) * 360);
     
-    // Update audio source and play if it was already playing
+    // Always play the previous song when user explicitly changes songs, regardless of previous state
     if (audioRef.current) {
-      const wasPlaying = !audioRef.current.paused;
       audioRef.current.src = mahalayaSongs[prevIndex].src;
-      if (wasPlaying) {
-        audioRef.current.play().catch(error => {
+      // Force play the previous song
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
           console.error("Error playing previous song:", error);
         });
       }
+      
+      // Always set playing state to true when changing songs
+      setIsPlaying(true);
     }
   }
 
