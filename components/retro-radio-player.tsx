@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
+import { useOrientation } from "@/hooks/use-orientation"
 
 interface Song {
   id: number
@@ -35,9 +36,40 @@ export function RetroRadioPlayer() {
   const [isFavorite, setIsFavorite] = useState(false)
   const [isShuffled, setIsShuffled] = useState(false)
   const [repeatMode, setRepeatMode] = useState(0) // 0: off, 1: all, 2: one
+  const [screenHeight, setScreenHeight] = useState(0)
+  const [screenWidth, setScreenWidth] = useState(0)
+  const [isLandscape, setIsLandscape] = useState(false)
+  const orientation = useOrientation()
 
   const volumeKnobRef = useRef<HTMLDivElement>(null)
   const tuningKnobRef = useRef<HTMLDivElement>(null)
+  const radioPlayerRef = useRef<HTMLDivElement>(null)
+
+  // Handle screen dimensions and orientation
+  useEffect(() => {
+    const updateDimensions = () => {
+      setScreenHeight(window.innerHeight)
+      setScreenWidth(window.innerWidth)
+      setIsLandscape(window.innerWidth > window.innerHeight)
+    }
+    
+    // Initial setup
+    updateDimensions()
+    
+    // Listen for resize and orientation changes
+    window.addEventListener('resize', updateDimensions)
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions)
+    }
+  }, [])
+  
+  // Update isLandscape when orientation changes
+  useEffect(() => {
+    if (orientation) {
+      setIsLandscape(orientation === 'landscape')
+    }
+  }, [orientation])
 
   useEffect(() => {
     setKnobRotation(volume[0] * 2.7) // 270 degrees max rotation
@@ -80,6 +112,7 @@ export function RetroRadioPlayer() {
   const handleTuningTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (!tuningKnobRef.current) return
+      e.preventDefault() // Prevent default to avoid scrolling while dragging
       setIsDragging(true)
       const touch = e.touches[0]
       const startAngle = getAngleFromCenter(touch.clientX, touch.clientY, tuningKnobRef.current)
@@ -105,6 +138,7 @@ export function RetroRadioPlayer() {
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging || !tuningKnobRef.current) return
+      e.preventDefault() // Prevent scrolling during touch interactions
       const touch = e.touches[0]
       const currentAngle = getAngleFromCenter(touch.clientX, touch.clientY, tuningKnobRef.current)
       let angleDiff = currentAngle - dragStartAngle
@@ -113,7 +147,9 @@ export function RetroRadioPlayer() {
       if (angleDiff > 180) angleDiff -= 360
       if (angleDiff < -180) angleDiff += 360
 
-      const newRotation = (dragStartRotation + angleDiff + 360) % 360
+      // Apply some sensitivity adjustment for touch screens
+      const sensitivity = isLandscape ? 1.2 : 1
+      const newRotation = (dragStartRotation + (angleDiff * sensitivity) + 360) % 360
       setTuningKnobRotation(newRotation)
     }
 
@@ -168,9 +204,9 @@ export function RetroRadioPlayer() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col">
+    <div className="w-full h-screen flex flex-col" ref={radioPlayerRef}>
       <div className="portrait:block landscape:hidden">
-        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col relative overflow-hidden">
+        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col relative overflow-hidden safe-area-inset-bottom">
           {/* Top Section - Song Info */}
           <div className="flex-shrink-0 pt-16 pb-8 px-6">
             <div className="text-center">
@@ -397,19 +433,19 @@ export function RetroRadioPlayer() {
         </div>
       </div>
 
-      <div className="portrait:hidden landscape:block w-full h-screen">
-        <Card className="bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700 rounded-3xl relative overflow-hidden shadow-2xl shadow-black/80 h-screen flex flex-col m-4">
+      <div className="portrait:hidden landscape:block w-full h-screen flex items-center justify-center">
+        <Card className="bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700 rounded-3xl relative overflow-hidden shadow-2xl shadow-black/80 h-[90vh] max-h-[450px] w-[95%] max-w-5xl flex flex-col">
           {/* Brand Label - Top Right */}
           <div className="absolute top-3 sm:top-4 right-4 sm:right-8 text-white"></div>
 
-          <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 border-b border-gray-700 p-3 sm:p-4 md:p-6 shadow-inner shadow-black/60 drop-shadow-xl flex-1 rounded-t-3xl">
+          <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 border-b border-gray-700 p-2 landscape:p-1 sm:p-3 md:p-4 shadow-inner shadow-black/60 drop-shadow-xl flex-1 rounded-t-3xl">
             <div className="w-full h-full">
               {/* Frequency Display - Full Width */}
-              <div className="bg-gradient-to-b from-gray-800 via-gray-900 to-black rounded-lg p-4 sm:p-6 md:p-8 border-2 border-emerald-500/30 relative shadow-inner shadow-black/80 drop-shadow-2xl h-full flex flex-col justify-center backdrop-blur-sm">
+              <div className="bg-gradient-to-b from-gray-800 via-gray-900 to-black rounded-lg p-3 landscape:p-2 sm:p-4 md:p-6 border-2 border-emerald-500/30 relative shadow-inner shadow-black/80 drop-shadow-2xl h-full flex flex-col justify-center backdrop-blur-sm overflow-y-auto">
                 {/* Frequency Scale */}
-                <div className="relative h-20 sm:h-24 md:h-28 mb-6">
+                <div className="relative h-16 landscape:h-14 sm:h-20 md:h-24 mb-3 landscape:mb-2 sm:mb-4 md:mb-6">
                   {/* Frequency Numbers */}
-                  <div className="absolute top-0 left-0 right-0 flex justify-between text-emerald-400 text-xs sm:text-sm font-mono tracking-wider">
+                  <div className="absolute top-0 left-0 right-0 flex justify-between text-emerald-400 text-[10px] landscape:text-[9px] sm:text-xs md:text-sm font-mono tracking-wider">
                     {[88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108].map((freq) => (
                       <span key={freq} className="text-shadow">
                         {freq}
@@ -418,37 +454,44 @@ export function RetroRadioPlayer() {
                   </div>
 
                   {/* Scale Lines */}
-                  <div className="absolute top-6 left-0 right-0 flex justify-between">
+                  <div className="absolute top-4 landscape:top-3 sm:top-5 md:top-6 left-0 right-0 flex justify-between">
                     {Array.from({ length: 41 }, (_, i) => (
                       <div
                         key={i}
-                        className={`w-px bg-gray-500 ${i % 4 === 0 ? "h-8 bg-emerald-400/70" : "h-4"} shadow-sm`}
+                        className={`w-px bg-gray-500 ${i % 4 === 0 ? "h-6 landscape:h-5 sm:h-7 md:h-8 bg-emerald-400/70" : "h-3 landscape:h-2.5 sm:h-3.5 md:h-4"} shadow-sm`}
                       />
                     ))}
                   </div>
 
                   {/* Red Tuning Indicator */}
                   <div
-                    className="absolute top-4 w-1.5 h-20 bg-gradient-to-b from-red-400 to-red-600 rounded-full shadow-lg drop-shadow-lg transition-all duration-300 z-50 border border-red-300/50"
+                    className="absolute top-4 landscape:top-3 w-1 landscape:w-0.5 sm:w-1.5 h-12 landscape:h-10 sm:h-16 md:h-20 bg-gradient-to-b from-red-400 to-red-600 rounded-full shadow-lg drop-shadow-lg transition-all duration-300 z-50 border border-red-300/50"
                     style={{ left: `${tuning[0]}%`, transform: "translateX(-50%)" }}
                   />
 
                   {/* Second row of frequency numbers */}
-                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-emerald-400 text-xs sm:text-sm font-mono tracking-wider">
-                    {[530, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1600].map((freq) => (
-                      <span key={freq} className="text-shadow">
-                        {freq}
-                      </span>
-                    ))}
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-emerald-400 text-[10px] landscape:text-[9px] sm:text-xs md:text-sm font-mono tracking-wider">
+                    {isLandscape && screenWidth < 640 ? 
+                      [530, 700, 900, 1100, 1300, 1600].map((freq) => (
+                        <span key={freq} className="text-shadow">
+                          {freq}
+                        </span>
+                      )) :
+                      [530, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1600].map((freq) => (
+                        <span key={freq} className="text-shadow">
+                          {freq}
+                        </span>
+                      ))
+                    }
                   </div>
                 </div>
 
                 {/* Current Station Display */}
-                <div className="text-center mb-8">
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-mono mb-2 tracking-wider text-shadow-lg text-secondary">
+                <div className="text-center mb-3 landscape:mb-2 sm:mb-6 md:mb-8">
+                  <div className="text-xl landscape:text-lg sm:text-2xl md:text-3xl font-mono mb-1 landscape:mb-0.5 sm:mb-2 tracking-wider text-shadow-lg text-secondary truncate px-2">
                     {mahalayaSongs[currentSong].title}
                   </div>
-                  <div className="text-gray-300 text-lg sm:text-xl tracking-wide">
+                  <div className="text-gray-300 text-base landscape:text-sm sm:text-lg md:text-xl tracking-wide truncate px-2">
                     {mahalayaSongs[currentSong].artist}
                   </div>
                 </div>
@@ -457,36 +500,36 @@ export function RetroRadioPlayer() {
           </div>
 
           {/* Control Buttons Section */}
-          <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 p-4 sm:p-6 border-t border-gray-700 shadow-inner shadow-black/40 rounded-b-3xl">
+          <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 p-3 landscape:py-1.5 landscape:px-2 sm:p-4 md:p-6 border-t border-gray-700 shadow-inner shadow-black/40 rounded-b-3xl">
             <div className="flex justify-between items-center">
               {/* Left Side - 5 Control Buttons */}
-              <div className="flex gap-4 sm:gap-6 md:gap-8">
-                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
-                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+              <div className="flex gap-2 landscape:gap-1 sm:gap-3 md:gap-6">
+                <button className="relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 landscape:left-2 top-3 landscape:top-2 text-gray-200 text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
                     RADIO
                   </span>
                 </button>
 
-                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
-                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                <button className="relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 landscape:left-2 top-3 landscape:top-2 text-gray-200 text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
                     VOL
                   </span>
                 </button>
 
-                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
-                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                <button className="relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 landscape:left-2 top-3 landscape:top-2 text-gray-200 text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
                     TONE
                   </span>
                 </button>
 
-                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
-                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                <button className="relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 landscape:left-2 top-3 landscape:top-2 text-gray-200 text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
                     BAND
                   </span>
                 </button>
 
-                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
-                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                <button className="relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 landscape:left-2 top-3 landscape:top-2 text-gray-200 text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
                     MODE
                   </span>
                 </button>
@@ -497,12 +540,12 @@ export function RetroRadioPlayer() {
                 <div className="relative">
                   <div
                     ref={tuningKnobRef}
-                    className="relative inline-block w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none cursor-pointer hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-full before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]"
+                    className="relative inline-block w-20 landscape:w-16 h-20 landscape:h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none cursor-pointer hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-full before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]"
                     style={{ transform: `rotate(${tuningKnobRotation}deg)` }}
                     onMouseDown={handleTuningMouseDown}
                     onTouchStart={handleTuningTouchStart}
                   >
-                    <div className="absolute top-2 left-1/2 w-4 h-16 bg-gradient-to-b from-white to-gray-200 rounded-full transform -translate-x-1/2 shadow-lg drop-shadow-xl border border-gray-300 z-20" />
+                    <div className="absolute top-2 landscape:top-1.5 left-1/2 w-4 landscape:w-3 h-16 landscape:h-13 bg-gradient-to-b from-white to-gray-200 rounded-full transform -translate-x-1/2 shadow-lg drop-shadow-xl border border-gray-300 z-20" />
 
                     {/* Glow effect opposite to pointer */}
                     <div

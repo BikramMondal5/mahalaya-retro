@@ -1,7 +1,53 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* Safe area support for notched devices */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-inset-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-inset-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+/* Extra small screen support */
+@layer utilities {
+  .xs\:left-2 {
+    left: 0.5rem;
+  }
+  .xs\:top-2 {
+    top: 0.5rem;
+  }
+  .xs\:w-12 {
+    width: 3rem;
+  }
+  .xs\:h-10 {
+    height: 2.5rem;
+  }
+  .xs\:w-16 {
+    width: 4rem;
+  }
+  .xs\:h-16 {
+    height: 4rem;
+  }
+  .xs\:w-3 {
+    width: 0.75rem;
+  }
+  .xs\:h-12 {
+    height: 3rem;
+  }
+  .xs\:text-\[10px\] {
+    font-size: 10px;
+  }
+  .xs\:gap-2 {
+    gap: 0.5rem;
+  }
+}
 
 :root {
   /* Updated color scheme for retro radio theme */
