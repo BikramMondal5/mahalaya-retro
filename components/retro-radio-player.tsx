@@ -1,0 +1,521 @@
+"use client"
+
+import type React from "react"
+
+import { useState, useRef, useEffect, useCallback } from "react"
+import { Card } from "@/components/ui/card"
+
+interface Song {
+  id: number
+  title: string
+  artist: string
+  duration: string
+}
+
+const mahalayaSongs: Song[] = [
+  { id: 1, title: "Ya Devi Sarva Bhuteshu", artist: "Birendra Krishna Bhadra", duration: "4:32" },
+  { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15" },
+  { id: 3, title: "Chandipath", artist: "Birendra Krishna Bhadra", duration: "8:45" },
+  { id: 4, title: "Durga Stotram", artist: "Traditional", duration: "5:20" },
+  { id: 5, title: "Aigiri Nandini", artist: "Classical", duration: "7:30" },
+  { id: 6, title: "Sarva Mangala Mangalye", artist: "Devotional", duration: "3:45" },
+]
+
+export function RetroRadioPlayer() {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentSong, setCurrentSong] = useState(0)
+  const [volume, setVolume] = useState([75])
+  const [tuning, setTuning] = useState([50])
+  const [knobRotation, setKnobRotation] = useState(0)
+  const [tuningKnobRotation, setTuningKnobRotation] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStartAngle, setDragStartAngle] = useState(0)
+  const [dragStartRotation, setDragStartRotation] = useState(0)
+  const [currentTime, setCurrentTime] = useState(83) // 1:23 in seconds
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [isShuffled, setIsShuffled] = useState(false)
+  const [repeatMode, setRepeatMode] = useState(0) // 0: off, 1: all, 2: one
+
+  const volumeKnobRef = useRef<HTMLDivElement>(null)
+  const tuningKnobRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setKnobRotation(volume[0] * 2.7) // 270 degrees max rotation
+  }, [volume])
+
+  useEffect(() => {
+    const newTuning = Math.max(0, Math.min(100, (tuningKnobRotation / 360) * 100))
+    if (Math.abs(newTuning - tuning[0]) > 1) {
+      setTuning([newTuning])
+    }
+  }, [tuningKnobRotation, tuning])
+
+  useEffect(() => {
+    const stationIndex = Math.floor((tuning[0] / 100) * mahalayaSongs.length)
+    const clampedIndex = Math.min(stationIndex, mahalayaSongs.length - 1)
+    if (clampedIndex !== currentSong) {
+      setCurrentSong(clampedIndex)
+    }
+  }, [tuning, currentSong])
+
+  const getAngleFromCenter = useCallback((clientX: number, clientY: number, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI)
+    return angle + 90 // Adjust so 0 degrees is at the top
+  }, [])
+
+  const handleTuningMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!tuningKnobRef.current) return
+      setIsDragging(true)
+      const startAngle = getAngleFromCenter(e.clientX, e.clientY, tuningKnobRef.current)
+      setDragStartAngle(startAngle)
+      setDragStartRotation(tuningKnobRotation)
+    },
+    [tuningKnobRotation, getAngleFromCenter],
+  )
+
+  const handleTuningTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!tuningKnobRef.current) return
+      setIsDragging(true)
+      const touch = e.touches[0]
+      const startAngle = getAngleFromCenter(touch.clientX, touch.clientY, tuningKnobRef.current)
+      setDragStartAngle(startAngle)
+      setDragStartRotation(tuningKnobRotation)
+    },
+    [tuningKnobRotation, getAngleFromCenter],
+  )
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !tuningKnobRef.current) return
+      const currentAngle = getAngleFromCenter(e.clientX, e.clientY, tuningKnobRef.current)
+      let angleDiff = currentAngle - dragStartAngle
+
+      // Handle angle wrap-around
+      if (angleDiff > 180) angleDiff -= 360
+      if (angleDiff < -180) angleDiff += 360
+
+      const newRotation = (dragStartRotation + angleDiff + 360) % 360
+      setTuningKnobRotation(newRotation)
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || !tuningKnobRef.current) return
+      const touch = e.touches[0]
+      const currentAngle = getAngleFromCenter(touch.clientX, touch.clientY, tuningKnobRef.current)
+      let angleDiff = currentAngle - dragStartAngle
+
+      // Handle angle wrap-around
+      if (angleDiff > 180) angleDiff -= 360
+      if (angleDiff < -180) angleDiff += 360
+
+      const newRotation = (dragStartRotation + angleDiff + 360) % 360
+      setTuningKnobRotation(newRotation)
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+      document.addEventListener("touchmove", handleTouchMove)
+      document.addEventListener("touchend", handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+      document.removeEventListener("touchmove", handleTouchMove)
+      document.removeEventListener("touchend", handleMouseUp)
+    }
+  }, [isDragging, dragStartAngle, dragStartRotation, getAngleFromCenter])
+
+  const togglePlay = () => {
+    setIsPlaying(!isPlaying)
+  }
+
+  const nextSong = () => {
+    const nextIndex = (currentSong + 1) % mahalayaSongs.length
+    setCurrentSong(nextIndex)
+    const newTuningValue = (nextIndex / (mahalayaSongs.length - 1)) * 100
+    setTuning([newTuningValue])
+    setTuningKnobRotation((newTuningValue / 100) * 360)
+  }
+
+  const prevSong = () => {
+    const prevIndex = (currentSong - 1 + mahalayaSongs.length) % mahalayaSongs.length
+    setCurrentSong(prevIndex)
+    const newTuningValue = (prevIndex / (mahalayaSongs.length - 1)) * 100
+    setTuning([newTuningValue])
+    setTuningKnobRotation((newTuningValue / 100) * 360)
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const parseDuration = (duration: string) => {
+    const [mins, secs] = duration.split(":").map(Number)
+    return mins * 60 + secs
+  }
+
+  return (
+    <div className="w-full h-screen flex flex-col">
+      <div className="portrait:block landscape:hidden">
+        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col relative overflow-hidden">
+          {/* Top Section - Song Info */}
+          <div className="flex-shrink-0 pt-16 pb-8 px-6">
+            <div className="text-center">
+              <h1 className="text-xl font-semibold mb-1 px-4 leading-tight tracking-wide text-secondary">
+                {mahalayaSongs[currentSong].title}
+              </h1>
+              <p className="text-gray-400 text-base font-medium">{mahalayaSongs[currentSong].artist}</p>
+            </div>
+          </div>
+
+          {/* Center Section - Album Art */}
+          <div className="flex-1 flex items-center justify-center px-8">
+            <div className="relative">
+              <div className="w-72 h-72 rounded-full overflow-hidden shadow-2xl border-4 border-gray-700/50 backdrop-blur-sm">
+                <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center relative">
+                  {/* Modern vinyl record effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-700/20 via-transparent to-gray-900/40 rounded-full"></div>
+                  <div className="absolute inset-8 bg-gradient-to-br from-gray-800/30 to-black/50 rounded-full border border-gray-700/30"></div>
+                  <div className="absolute inset-16 bg-gradient-to-br from-gray-900/50 to-black/70 rounded-full border border-gray-600/20"></div>
+
+                  <button
+                    onClick={togglePlay}
+                    className="w-16 h-16 bg-black/60 backdrop-blur-md rounded-xl flex items-center justify-center shadow-xl border border-gray-700/50 hover:bg-black/80 transition-all duration-200 z-20"
+                  >
+                    {isPlaying ? (
+                      <div className="flex gap-1.5">
+                        <div className="w-2 h-8 bg-white rounded-full"></div>
+                        <div className="w-2 h-8 bg-white rounded-full"></div>
+                      </div>
+                    ) : (
+                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </button>
+
+                  {/* Center hole with modern styling */}
+                  <div className="absolute w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-inner border-2 border-emerald-400/30 -z-10">
+                    <div className="w-4 h-4 bg-emerald-800 rounded-full shadow-inner"></div>
+                  </div>
+
+                  {/* Modern glass effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Audio Waveform */}
+          <div className="flex-shrink-0 px-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-gray-300 text-sm font-mono tracking-wider">{formatTime(currentTime)}</span>
+              <span className="text-gray-300 text-sm font-mono tracking-wider">
+                {mahalayaSongs[currentSong].duration}
+              </span>
+            </div>
+
+            <div className="flex items-end justify-center gap-1 h-16 mb-4 bg-gray-900/50 rounded-lg p-2 backdrop-blur-sm">
+              {Array.from({ length: 60 }, (_, i) => {
+                const height = Math.random() * 40 + 8
+                const isActive = i < (currentTime / parseDuration(mahalayaSongs[currentSong].duration)) * 60
+                return (
+                  <div
+                    key={i}
+                    className={`w-1 rounded-full transition-all duration-300 ${
+                      isActive ? "bg-emerald-400 shadow-sm shadow-emerald-400/50" : "bg-gray-600"
+                    }`}
+                    style={{ height: `${height}px` }}
+                  />
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Main Controls */}
+          <div className="flex-shrink-0 px-8 mb-8">
+            <div className="flex items-center justify-center gap-8">
+              <button
+                onClick={prevSong}
+                className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
+              >
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                </svg>
+              </button>
+
+              <button
+                onClick={togglePlay}
+                className="w-16 h-16 bg-gradient-to-br from-white to-gray-100 rounded-2xl flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-gray-200"
+              >
+                {isPlaying ? (
+                  <div className="flex gap-2">
+                    <div className="w-2 h-8 bg-black rounded-full"></div>
+                    <div className="w-2 h-8 bg-black rounded-full"></div>
+                  </div>
+                ) : (
+                  <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </button>
+
+              <button
+                onClick={nextSong}
+                className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
+              >
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 18l8.5-6h8l8.5 6v-12h-8v12z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary Controls */}
+          <div className="flex-shrink-0 px-8 mb-6">
+            <div className="flex items-center justify-center gap-8">
+              <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200">
+                <svg
+                  className="w-6 h-6 text-gray-400 hover:text-white transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => setIsShuffled(!isShuffled)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
+              >
+                <svg
+                  className={`w-6 h-6 transition-colors ${isShuffled ? "text-emerald-400" : "text-gray-400 hover:text-white"}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0l1 16h8l1-16"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => setIsFavorite(!isFavorite)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
+              >
+                <svg
+                  className={`w-6 h-6 transition-colors ${isFavorite ? "text-red-400" : "text-gray-400 hover:text-white"}`}
+                  fill={isFavorite ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => setRepeatMode((repeatMode + 1) % 3)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
+              >
+                <svg
+                  className={`w-6 h-6 transition-colors ${repeatMode > 0 ? "text-emerald-400" : "text-gray-400 hover:text-white"}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200">
+                <svg
+                  className="w-6 h-6 text-gray-400 hover:text-white transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Volume Control */}
+          <div className="flex-shrink-0 px-8 pb-8">
+            <div className="flex items-center gap-4 bg-gray-900/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/30">
+              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+
+              <div className="flex-1 h-2 bg-gray-700 rounded-full relative">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full relative shadow-sm"
+                  style={{ width: `${volume[0]}%` }}
+                >
+                  <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-emerald-400"></div>
+                </div>
+              </div>
+
+              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="portrait:hidden landscape:block w-full h-screen">
+        <Card className="bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700 rounded-3xl relative overflow-hidden shadow-2xl shadow-black/80 h-screen flex flex-col m-4">
+          {/* Brand Label - Top Right */}
+          <div className="absolute top-3 sm:top-4 right-4 sm:right-8 text-white"></div>
+
+          <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 border-b border-gray-700 p-3 sm:p-4 md:p-6 shadow-inner shadow-black/60 drop-shadow-xl flex-1 rounded-t-3xl">
+            <div className="w-full h-full">
+              {/* Frequency Display - Full Width */}
+              <div className="bg-gradient-to-b from-gray-800 via-gray-900 to-black rounded-lg p-4 sm:p-6 md:p-8 border-2 border-emerald-500/30 relative shadow-inner shadow-black/80 drop-shadow-2xl h-full flex flex-col justify-center backdrop-blur-sm">
+                {/* Frequency Scale */}
+                <div className="relative h-20 sm:h-24 md:h-28 mb-6">
+                  {/* Frequency Numbers */}
+                  <div className="absolute top-0 left-0 right-0 flex justify-between text-emerald-400 text-xs sm:text-sm font-mono tracking-wider">
+                    {[88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108].map((freq) => (
+                      <span key={freq} className="text-shadow">
+                        {freq}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Scale Lines */}
+                  <div className="absolute top-6 left-0 right-0 flex justify-between">
+                    {Array.from({ length: 41 }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`w-px bg-gray-500 ${i % 4 === 0 ? "h-8 bg-emerald-400/70" : "h-4"} shadow-sm`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Red Tuning Indicator */}
+                  <div
+                    className="absolute top-4 w-1.5 h-20 bg-gradient-to-b from-red-400 to-red-600 rounded-full shadow-lg drop-shadow-lg transition-all duration-300 z-50 border border-red-300/50"
+                    style={{ left: `${tuning[0]}%`, transform: "translateX(-50%)" }}
+                  />
+
+                  {/* Second row of frequency numbers */}
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-emerald-400 text-xs sm:text-sm font-mono tracking-wider">
+                    {[530, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1600].map((freq) => (
+                      <span key={freq} className="text-shadow">
+                        {freq}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Current Station Display */}
+                <div className="text-center mb-8">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-mono mb-2 tracking-wider text-shadow-lg text-secondary">
+                    {mahalayaSongs[currentSong].title}
+                  </div>
+                  <div className="text-gray-300 text-lg sm:text-xl tracking-wide">
+                    {mahalayaSongs[currentSong].artist}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Control Buttons Section */}
+          <div className="bg-gradient-to-r from-gray-900 via-black to-gray-900 p-4 sm:p-6 border-t border-gray-700 shadow-inner shadow-black/40 rounded-b-3xl">
+            <div className="flex justify-between items-center">
+              {/* Left Side - 5 Control Buttons */}
+              <div className="flex gap-4 sm:gap-6 md:gap-8">
+                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                    RADIO
+                  </span>
+                </button>
+
+                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                    VOL
+                  </span>
+                </button>
+
+                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                    TONE
+                  </span>
+                </button>
+
+                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                    BAND
+                  </span>
+                </button>
+
+                <button className="relative inline-block w-14 h-12 sm:w-18 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
+                  <span className="absolute left-3 top-3 text-gray-200 text-xs sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                    MODE
+                  </span>
+                </button>
+              </div>
+
+              {/* Right Side - Tuning Knob */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <div
+                    ref={tuningKnobRef}
+                    className="relative inline-block w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none cursor-pointer hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-full before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]"
+                    style={{ transform: `rotate(${tuningKnobRotation}deg)` }}
+                    onMouseDown={handleTuningMouseDown}
+                    onTouchStart={handleTuningTouchStart}
+                  >
+                    <div className="absolute top-2 left-1/2 w-4 h-16 bg-gradient-to-b from-white to-gray-200 rounded-full transform -translate-x-1/2 shadow-lg drop-shadow-xl border border-gray-300 z-20" />
+
+                    {/* Glow effect opposite to pointer */}
+                    <div
+                      className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-400/20 via-gray-500/30 to-gray-600/20 blur-lg"
+                      style={{ transform: `rotate(180deg)` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}

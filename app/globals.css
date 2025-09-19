@@ -1,0 +1,157 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color scheme for retro radio theme */
+  --background: oklch(0 0 0); /* Black background */
+  --foreground: oklch(1 0 0); /* White text */
+  --card: oklch(0.1 0 0); /* Dark grey for cards */
+  --card-foreground: oklch(1 0 0); /* White text on cards */
+  --popover: oklch(0.1 0 0); /* Dark grey for popovers */
+  --popover-foreground: oklch(1 0 0); /* White text on popovers */
+  --primary: oklch(0.7 0.15 127); /* Neon green for primary actions */
+  --primary-foreground: oklch(0 0 0); /* Black text on primary */
+  --secondary: oklch(0.6 0.15 60); /* Amber for secondary actions */
+  --secondary-foreground: oklch(1 0 0); /* White text on secondary */
+  --muted: oklch(0.4 0 0); /* Dark grey for muted elements */
+  --muted-foreground: oklch(0.7 0 0); /* Light grey for muted text */
+  --accent: oklch(0.65 0.2 40); /* Gold for accents */
+  --accent-foreground: oklch(0 0 0); /* Black text on accent */
+  --destructive: oklch(0.6 0.2 20); /* Red for destructive actions */
+  --destructive-foreground: oklch(1 0 0); /* White text on destructive */
+  --border: oklch(0.3 0 0); /* Dark grey for borders */
+  --input: oklch(0.15 0 0); /* Very dark grey for inputs */
+  --ring: oklch(0.7 0.15 127); /* Neon green for focus rings */
+  --chart-1: oklch(0.6 0.15 60); /* Amber */
+  --chart-2: oklch(0.65 0.2 40); /* Gold */
+  --chart-3: oklch(0.7 0.15 127); /* Neon green */
+  --chart-4: oklch(0.6 0.2 20); /* Red */
+  --chart-5: oklch(0.5 0.1 200); /* Blue */
+  --radius: 0.625rem;
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.7 0.15 127);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.6 0.15 60);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.3 0 0);
+  --sidebar-ring: oklch(0.7 0.15 127);
+}
+
+.dark {
+  /* Dark mode uses same colors as we want black theme */
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.7 0.15 127);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.6 0.15 60);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.4 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.65 0.2 40);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.6 0.2 20);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.3 0 0);
+  --input: oklch(0.15 0 0);
+  --ring: oklch(0.7 0.15 127);
+  --chart-1: oklch(0.6 0.15 60);
+  --chart-2: oklch(0.65 0.2 40);
+  --chart-3: oklch(0.7 0.15 127);
+  --chart-4: oklch(0.6 0.2 20);
+  --chart-5: oklch(0.5 0.1 200);
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.7 0.15 127);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.6 0.15 60);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.3 0 0);
+  --sidebar-ring: oklch(0.7 0.15 127);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Added custom styles for retro radio effects */
+@layer utilities {
+  .glow-primary {
+    box-shadow: 0 0 20px oklch(0.7 0.15 127 / 0.5);
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 15px oklch(0.6 0.15 60 / 0.4);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 10px oklch(0.65 0.2 40 / 0.3);
+  }
+
+  .radio-texture {
+    background-image: radial-gradient(circle at 1px 1px, oklch(0.2 0 0) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+
+  .led-text {
+    font-family: "Courier New", monospace;
+    text-shadow: 0 0 10px currentColor;
+    letter-spacing: 0.1em;
+  }
+
+  .knob-shadow {
+    box-shadow: inset 0 2px 4px oklch(0.3 0 0), inset 0 -2px 4px oklch(0.05 0 0), 0 0 0 2px oklch(0.2 0 0);
+  }
+}
