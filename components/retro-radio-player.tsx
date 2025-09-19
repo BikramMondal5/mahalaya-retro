@@ -15,18 +15,18 @@ interface Song {
 }
 
 const mahalayaSongs: Song[] = [
-  { id: 1, title: "Ya Devi Sarva Bhuteshu", artist: "Birendra Krishna Bhadra", duration: "4:32", src: "/audio/mahalaya-song1.mpeg" },
-  { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15", src: "/audio/mahalaya-song2.mpeg" },
-  { id: 3, title: "Chandipath", artist: "Birendra Krishna Bhadra", duration: "8:45", src: "/audio/mahalaya-song3.mpeg" },
-  { id: 4, title: "Aigiri Nandini", artist: "Classical Devotional", duration: "5:20", src: "/audio/mahalaya-song4.mpeg" },
-  { id: 5, title: "Durga Stotram", artist: "Birendra Krishna Bhadra", duration: "7:30", src: "/audio/mahalaya-song5.mpeg" },
-  { id: 6, title: "Sarva Mangala Mangalye", artist: "Traditional", duration: "3:45", src: "/audio/mahalaya-song6.mpeg" },
-  { id: 7, title: "Jaya Jaya He Mahishasura Mardini", artist: "Classical", duration: "6:40", src: "/audio/mahalaya-song7.mpeg" },
-  { id: 8, title: "Devi Suktam", artist: "Vedic Chants", duration: "5:55", src: "/audio/mahalaya-song8.mpeg" },
-  { id: 9, title: "Durga Chalisa", artist: "Devotional", duration: "7:15", src: "/audio/mahalaya-song9.mpeg" },
-  { id: 10, title: "Shailaputri Vandana", artist: "Devotional", duration: "4:50", src: "/audio/mahalaya-song10.mpeg" },
-  { id: 11, title: "Brahmacharini Stotram", artist: "Traditional", duration: "5:10", src: "/audio/mahalaya-song11.mpeg" },
-  { id: 12, title: "Chandraghanta Stuti", artist: "Classical Devotional", duration: "6:05", src: "/audio/mahalaya-song12.mpeg" },
+  { id: 1, title: "Ya Chandi", artist: "Birendra Krishna Bhadra", duration: "4:32", src: "/audio/Ya-chandi.mpeg" },
+  { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15", src: "/audio/Mahisasuramardini.mpeg" },
+  { id: 3, title: "Namo Chandi", artist: "Birendra Krishna Bhadra", duration: "8:45", src: "/audio/Namo%20Chandi.mpeg" },
+  { id: 4, title: "Jago Durga", artist: "Classical Devotional", duration: "5:20", src: "/audio/Jago-Durga.mpeg" },
+  { id: 5, title: "Tabo Achintya", artist: "Birendra Krishna Bhadra", duration: "7:30", src: "/audio/Tabo%20Achintya.mpeg" },
+  { id: 6, title: "Bimane Bimane", artist: "Traditional", duration: "3:45", src: "/audio/Bimane%20Bimane.mpeg" },
+  { id: 7, title: "Laglo Tomai", artist: "Classical", duration: "6:40", src: "/audio/Laglo-tomai.mpeg" },
+  { id: 8, title: "Ma Go Taba Beene", artist: "Vedic Chants", duration: "5:55", src: "/audio/Ma%20Go%20Taba%20Beene.mpeg" },
+  { id: 9, title: "Akhila Bimane Taba Jaya Gane", artist: "Devotional", duration: "7:15", src: "/audio/AkhilaBimane%20Taba%20JayaGane.mpeg" },
+  { id: 10, title: "Simhastha Sashisekhara", artist: "Devotional", duration: "4:50", src: "/audio/Simhastha%20Sashisekhara.mpeg" },
+  { id: 11, title: "Aham Rudrebhirvasubhischara", artist: "Traditional", duration: "5:10", src: "/audio/Aham%20Rudrebhirvasubhischara.mpeg" },
+  { id: 12, title: "Jatajauta Samayuktam", artist: "Classical Devotional", duration: "6:05", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
 ]
 
 export function RetroRadioPlayer() {
@@ -475,22 +475,6 @@ export function RetroRadioPlayer() {
                   <div className="absolute inset-8 bg-gradient-to-br from-gray-800/30 to-black/50 rounded-full border border-gray-700/30"></div>
                   <div className="absolute inset-16 bg-gradient-to-br from-gray-900/50 to-black/70 rounded-full border border-gray-600/20"></div>
 
-                  <button
-                    onClick={togglePlay}
-                    className="w-16 h-16 bg-black/60 backdrop-blur-md rounded-xl flex items-center justify-center shadow-xl border border-gray-700/50 hover:bg-black/80 transition-all duration-200 z-20"
-                  >
-                    {isPlaying ? (
-                      <div className="flex gap-1.5">
-                        <div className="w-2 h-8 bg-white rounded-full"></div>
-                        <div className="w-2 h-8 bg-white rounded-full"></div>
-                      </div>
-                    ) : (
-                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    )}
-                  </button>
-
                   {/* Center hole with modern styling */}
                   <div className="absolute w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-inner border-2 border-emerald-400/30 -z-10">
                     <div className="w-4 h-4 bg-emerald-800 rounded-full shadow-inner"></div>
@@ -503,16 +487,6 @@ export function RetroRadioPlayer() {
             </div>
           </div>
 
-          {/* Time Display */}
-          <div className="flex-shrink-0 px-6 mb-4 text-center">
-            <div className="inline-block text-xl font-mono tracking-wider">
-              <span className="text-gray-300">{formatTime(currentTime).split(":")[0]}</span>
-              <span className="text-gray-300">:</span>
-              <span className="text-gray-300">{formatTime(currentTime).split(":")[1]}</span>
-              <span className="text-emerald-400 ml-0.5">:{secondsDisplay}</span>
-            </div>
-          </div>
-          
           {/* Audio Waveform Visualization */}
           <div className="flex-shrink-0 px-6 mb-8">
             <div className="flex items-end justify-center gap-[2px] h-16 bg-black/70 rounded-md p-2">
@@ -547,15 +521,15 @@ export function RetroRadioPlayer() {
 
               <button
                 onClick={togglePlay}
-                className="w-16 h-16 bg-gradient-to-br from-white to-gray-100 rounded-2xl flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-gray-200"
+                className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-emerald-400/30"
               >
                 {isPlaying ? (
                   <div className="flex gap-2">
-                    <div className="w-2 h-8 bg-black rounded-full"></div>
-                    <div className="w-2 h-8 bg-black rounded-full"></div>
+                    <div className="w-2.5 h-10 bg-white rounded-full"></div>
+                    <div className="w-2.5 h-10 bg-white rounded-full"></div>
                   </div>
                 ) : (
-                  <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 text-white ml-1.5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 )}
