@@ -204,9 +204,9 @@ export function RetroRadioPlayer() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col" ref={radioPlayerRef}>
-      <div className="portrait:block landscape:hidden">
-        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col relative overflow-hidden safe-area-inset-bottom">
+    <div className="w-full h-screen flex flex-col items-center justify-center" ref={radioPlayerRef}>
+      <div className="portrait:block landscape:hidden w-full max-w-md mx-auto">
+        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col items-center relative overflow-hidden safe-area-inset-bottom">
           {/* Top Section - Song Info */}
           <div className="flex-shrink-0 pt-16 pb-8 px-6">
             <div className="text-center">
@@ -218,8 +218,8 @@ export function RetroRadioPlayer() {
           </div>
 
           {/* Center Section - Album Art */}
-          <div className="flex-1 flex items-center justify-center px-8">
-            <div className="relative">
+          <div className="flex-1 flex items-center justify-center px-8 w-full">
+            <div className="relative mx-auto">
               <div className="w-72 h-72 rounded-full overflow-hidden shadow-2xl border-4 border-gray-700/50 backdrop-blur-sm">
                 <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center relative">
                   {/* Modern vinyl record effect */}
@@ -282,8 +282,8 @@ export function RetroRadioPlayer() {
           </div>
 
           {/* Main Controls */}
-          <div className="flex-shrink-0 px-8 mb-8">
-            <div className="flex items-center justify-center gap-8">
+          <div className="flex-shrink-0 px-8 mb-8 w-full">
+            <div className="flex items-center justify-center gap-8 mx-auto">
               <button
                 onClick={prevSong}
                 className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
@@ -321,8 +321,8 @@ export function RetroRadioPlayer() {
           </div>
 
           {/* Secondary Controls */}
-          <div className="flex-shrink-0 px-8 mb-6">
-            <div className="flex items-center justify-center gap-8">
+          <div className="flex-shrink-0 px-8 mb-6 w-full">
+            <div className="flex items-center justify-center gap-8 mx-auto">
               <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200">
                 <svg
                   className="w-6 h-6 text-gray-400 hover:text-white transition-colors"
@@ -410,8 +410,8 @@ export function RetroRadioPlayer() {
           </div>
 
           {/* Volume Control */}
-          <div className="flex-shrink-0 px-8 pb-8">
-            <div className="flex items-center gap-4 bg-gray-900/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/30">
+          <div className="flex-shrink-0 px-8 pb-8 w-full">
+            <div className="flex items-center gap-4 bg-gray-900/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/30 mx-auto max-w-md">
               <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
               </svg>
@@ -434,7 +434,7 @@ export function RetroRadioPlayer() {
       </div>
 
       <div className="portrait:hidden landscape:block w-full h-screen flex items-center justify-center">
-        <Card className="bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700 rounded-3xl relative overflow-hidden shadow-2xl shadow-black/80 h-[90vh] max-h-[450px] w-[95%] max-w-5xl flex flex-col">
+        <Card className="mx-auto bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700 rounded-3xl relative overflow-hidden shadow-2xl shadow-black/80 h-[90vh] max-h-[450px] w-[95%] max-w-5xl flex flex-col">
           {/* Brand Label - Top Right */}
           <div className="absolute top-3 sm:top-4 right-4 sm:right-8 text-white"></div>
 
