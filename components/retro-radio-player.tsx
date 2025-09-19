@@ -33,38 +33,47 @@ export function RetroRadioPlayer() {
   const [dragStartAngle, setDragStartAngle] = useState(0)
   const [dragStartRotation, setDragStartRotation] = useState(0)
   const [currentTime, setCurrentTime] = useState(83) // 1:23 in seconds
+  const [secondsDisplay, setSecondsDisplay] = useState("00")
   const [isFavorite, setIsFavorite] = useState(false)
   const [isShuffled, setIsShuffled] = useState(false)
   const [repeatMode, setRepeatMode] = useState(0) // 0: off, 1: all, 2: one
   const [screenHeight, setScreenHeight] = useState(0)
   const [screenWidth, setScreenWidth] = useState(0)
   const [isLandscape, setIsLandscape] = useState(false)
+  const [visualizerBars, setVisualizerBars] = useState<number[]>([])
   const orientation = useOrientation()
 
   const volumeKnobRef = useRef<HTMLDivElement>(null)
   const tuningKnobRef = useRef<HTMLDivElement>(null)
   const radioPlayerRef = useRef<HTMLDivElement>(null)
 
-  // Handle screen dimensions and orientation
+  // Use effect to update screen dimensions and orientation
   useEffect(() => {
-    const updateDimensions = () => {
-      setScreenHeight(window.innerHeight)
-      setScreenWidth(window.innerWidth)
-      setIsLandscape(window.innerWidth > window.innerHeight)
+    if (typeof window !== "undefined") {
+      const updateDimensions = () => {
+        setScreenWidth(window.innerWidth)
+        setScreenHeight(window.innerHeight)
+        setIsLandscape(window.matchMedia("(orientation: landscape)").matches)
+      }
+      
+      // Initialize visualizer bars with consistent pattern resembling the reference image
+      const initialBars = Array.from({ length: 60 }, (_, i) => {
+        // Group bars in sections of 3 for a more natural audio visualizer look
+        const section = Math.floor(i / 3); 
+        const baseHeight = 15 + (Math.sin(section * 0.8) * 15);
+        const variance = Math.sin(i * 3.7) * 5;
+        return Math.floor(baseHeight + variance);
+      });
+      setVisualizerBars(initialBars)
+      
+      window.addEventListener('resize', updateDimensions)
+      updateDimensions()
+      
+      return () => {
+        window.removeEventListener('resize', updateDimensions)
+      }
     }
-    
-    // Initial setup
-    updateDimensions()
-    
-    // Listen for resize and orientation changes
-    window.addEventListener('resize', updateDimensions)
-    
-    return () => {
-      window.removeEventListener('resize', updateDimensions)
-    }
-  }, [])
-  
-  // Update isLandscape when orientation changes
+  }, [])  // Update isLandscape when orientation changes
   useEffect(() => {
     if (orientation) {
       setIsLandscape(orientation === 'landscape')
@@ -74,6 +83,37 @@ export function RetroRadioPlayer() {
   useEffect(() => {
     setKnobRotation(volume[0] * 2.7) // 270 degrees max rotation
   }, [volume])
+  
+  // Update seconds display on client-side only
+  useEffect(() => {
+    // Update the seconds every second on the client side only
+    if (typeof window !== 'undefined') {
+      const timer = setInterval(() => {
+        // Increment the time by 1 second, simulating playback
+        setCurrentTime(prevTime => (prevTime + 1) % parseDuration(mahalayaSongs[currentSong].duration))
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [currentSong])
+  
+  useEffect(() => {
+    // Animate the visualizer bars to match the reference image style
+    if (typeof window !== 'undefined') {
+      const animationTimer = setInterval(() => {
+        setVisualizerBars(prev => {
+          return Array.from({ length: 60 }, (_, i) => {
+            // Create more varied heights with some randomness but maintaining consistency within groups
+            const section = Math.floor(i / 3); // Group bars in sections of 3
+            const baseHeight = 15 + (Math.sin(section * 0.8 + (Date.now() / 1000)) * 15);
+            const variance = Math.sin(i * 3.7 + (Date.now() / 800)) * 5;
+            return Math.floor(baseHeight + variance);
+          });
+        });
+      }, 100);
+      
+      return () => clearInterval(animationTimer);
+    }
+  }, [])
 
   useEffect(() => {
     const newTuning = Math.max(0, Math.min(100, (tuningKnobRotation / 360) * 100))
@@ -255,26 +295,30 @@ export function RetroRadioPlayer() {
             </div>
           </div>
 
-          {/* Audio Waveform */}
-          <div className="flex-shrink-0 px-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-300 text-sm font-mono tracking-wider">{formatTime(currentTime)}</span>
-              <span className="text-gray-300 text-sm font-mono tracking-wider">
-                {mahalayaSongs[currentSong].duration}
-              </span>
+          {/* Time Display */}
+          <div className="flex-shrink-0 px-6 mb-4 text-center">
+            <div className="inline-block text-xl font-mono tracking-wider">
+              <span className="text-gray-300">{formatTime(currentTime).split(":")[0]}</span>
+              <span className="text-gray-300">:</span>
+              <span className="text-gray-300">{formatTime(currentTime).split(":")[1]}</span>
+              <span className="text-emerald-400 ml-0.5">:{secondsDisplay}</span>
             </div>
-
-            <div className="flex items-end justify-center gap-1 h-16 mb-4 bg-gray-900/50 rounded-lg p-2 backdrop-blur-sm">
-              {Array.from({ length: 60 }, (_, i) => {
-                const height = Math.random() * 40 + 8
+          </div>
+          
+          {/* Audio Waveform Visualization */}
+          <div className="flex-shrink-0 px-6 mb-8">
+            <div className="flex items-end justify-center gap-[2px] h-16 bg-black/70 rounded-md p-2">
+              {visualizerBars.map((height, i) => {
+                // Calculate a height between 5-30px from our visualizer values for a cleaner look
+                const barHeight = (height / 30) * 25 + 5;
                 const isActive = i < (currentTime / parseDuration(mahalayaSongs[currentSong].duration)) * 60
                 return (
                   <div
                     key={i}
-                    className={`w-1 rounded-full transition-all duration-300 ${
-                      isActive ? "bg-emerald-400 shadow-sm shadow-emerald-400/50" : "bg-gray-600"
+                    className={`w-[3px] ${
+                      isActive ? "bg-emerald-400" : "bg-gray-600"
                     }`}
-                    style={{ height: `${height}px` }}
+                    style={{ height: `${barHeight}px` }}
                   />
                 )
               })}
@@ -314,120 +358,9 @@ export function RetroRadioPlayer() {
                 className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
               >
                 <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 18l8.5-6h8l8.5 6v-12h-8v12z" />
+                  <path d="M6 6l8.5 6-8.5 6V6m9 12h2V6h-2v12z" />
                 </svg>
               </button>
-            </div>
-          </div>
-
-          {/* Secondary Controls */}
-          <div className="flex-shrink-0 px-8 mb-6 w-full">
-            <div className="flex items-center justify-center gap-8 mx-auto">
-              <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200">
-                <svg
-                  className="w-6 h-6 text-gray-400 hover:text-white transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => setIsShuffled(!isShuffled)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
-              >
-                <svg
-                  className={`w-6 h-6 transition-colors ${isShuffled ? "text-emerald-400" : "text-gray-400 hover:text-white"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0l1 16h8l1-16"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
-              >
-                <svg
-                  className={`w-6 h-6 transition-colors ${isFavorite ? "text-red-400" : "text-gray-400 hover:text-white"}`}
-                  fill={isFavorite ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => setRepeatMode((repeatMode + 1) % 3)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200"
-              >
-                <svg
-                  className={`w-6 h-6 transition-colors ${repeatMode > 0 ? "text-emerald-400" : "text-gray-400 hover:text-white"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-
-              <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all duration-200">
-                <svg
-                  className="w-6 h-6 text-gray-400 hover:text-white transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Volume Control */}
-          <div className="flex-shrink-0 px-8 pb-8 w-full">
-            <div className="flex items-center gap-4 bg-gray-900/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/30 mx-auto max-w-md">
-              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-              </svg>
-
-              <div className="flex-1 h-2 bg-gray-700 rounded-full relative">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full relative shadow-sm"
-                  style={{ width: `${volume[0]}%` }}
-                >
-                  <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-emerald-400"></div>
-                </div>
-              </div>
-
-              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-              </svg>
             </div>
           </div>
         </div>
@@ -545,7 +478,7 @@ export function RetroRadioPlayer() {
                     onMouseDown={handleTuningMouseDown}
                     onTouchStart={handleTuningTouchStart}
                   >
-                    <div className="absolute top-2 landscape:top-1.5 left-1/2 w-4 landscape:w-3 h-16 landscape:h-13 bg-gradient-to-b from-white to-gray-200 rounded-full transform -translate-x-1/2 shadow-lg drop-shadow-xl border border-gray-300 z-20" />
+                    <div className="absolute top-0 left-1/2 w-2 landscape:w-1.5 h-3 landscape:h-2.5 bg-gradient-to-b from-emerald-400 to-emerald-500 rounded-sm transform -translate-x-1/2 shadow-sm border border-emerald-300/50 z-20" />
 
                     {/* Glow effect opposite to pointer */}
                     <div
