@@ -246,9 +246,9 @@ export function RetroRadioPlayer() {
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center" ref={radioPlayerRef}>
       <div className="portrait:block landscape:hidden w-full max-w-md mx-auto">
-        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col items-center relative overflow-hidden safe-area-inset-bottom">
+        <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col items-center justify-evenly relative overflow-hidden safe-area-inset-bottom">
           {/* Top Section - Song Info */}
-          <div className="flex-shrink-0 pt-16 pb-8 px-6">
+          <div className="flex-shrink-0 pt-8 pb-8 px-6">
             <div className="text-center">
               <h1 className="text-xl font-semibold mb-1 px-4 leading-tight tracking-wide text-secondary">
                 {mahalayaSongs[currentSong].title}
@@ -258,7 +258,7 @@ export function RetroRadioPlayer() {
           </div>
 
           {/* Center Section - Album Art */}
-          <div className="flex-1 flex items-center justify-center px-8 w-full">
+          <div className="flex-shrink-0 flex items-center justify-center px-8 w-full my-4">
             <div className="relative mx-auto">
               <div className="w-72 h-72 rounded-full overflow-hidden shadow-2xl border-4 border-gray-700/50 backdrop-blur-sm">
                 <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black flex items-center justify-center relative">
