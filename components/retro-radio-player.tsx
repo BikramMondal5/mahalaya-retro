@@ -15,18 +15,18 @@ interface Song {
 }
 
 const mahalayaSongs: Song[] = [
-  { id: 1, title: "Ya Chandi", artist: "Birendra Krishna Bhadra", duration: "4:32", src: "/audio/Ya-chandi.mpeg" },
-  { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15", src: "/audio/Mahisasuramardini.mpeg" },
-  { id: 3, title: "Namo Chandi", artist: "Birendra Krishna Bhadra", duration: "8:45", src: "/audio/Namo%20Chandi.mpeg" },
-  { id: 4, title: "Jago Durga", artist: "Classical Devotional", duration: "5:20", src: "/audio/Jago-Durga.mpeg" },
-  { id: 5, title: "Tabo Achintya", artist: "Birendra Krishna Bhadra", duration: "7:30", src: "/audio/Tabo%20Achintya.mpeg" },
-  { id: 6, title: "Bimane Bimane", artist: "Traditional", duration: "3:45", src: "/audio/Bimane%20Bimane.mpeg" },
-  { id: 7, title: "Laglo Tomai", artist: "Classical", duration: "6:40", src: "/audio/Laglo-tomai.mpeg" },
-  { id: 8, title: "Ma Go Taba Beene", artist: "Vedic Chants", duration: "5:55", src: "/audio/Ma%20Go%20Taba%20Beene.mpeg" },
+  { id: 1, title: "Ya Chandi", artist: "Pankaj Mullick", duration: "4:32", src: "/audio/Ya-chandi.mpeg" },
+  { id: 2, title: "Mahishasura Mardini", artist: "Adi Shankaracharya", duration: "6:15", src: "/audio/Mahisasuramardini.mpeg" },
+  { id: 3, title: "Namo Chandi", artist: "Bimal Bhushan", duration: "8:45", src: "/audio/Namo%20Chandi.mpeg" },
+  { id: 4, title: "Jago Durga", artist: "Dwijen Mukherjee", duration: "5:20", src: "/audio/Jago-Durga.mpeg" },
+  { id: 5, title: "Tabo Achintya", artist: "Manabendra Mukherjee", duration: "7:30", src: "/audio/Tabo%20Achintya.mpeg" },
+  { id: 6, title: "Bimane Bimane", artist: "Sandhya Mukherjee", duration: "3:45", src: "/audio/Bimane%20Bimane.mpeg" },
+  { id: 7, title: "Bajlo Tomar", artist: "Supriti Ghosh", duration: "6:40", src: "/audio/Bajlo-tomai.mpeg" },
+  { id: 8, title: "Ma Go Taba Beene", artist: "Sumitra Sen", duration: "5:55", src: "/audio/Ma%20Go%20Taba%20Beene.mpeg" },
   { id: 9, title: "Akhila Bimane Taba Jaya Gane", artist: "Devotional", duration: "7:15", src: "/audio/AkhilaBimane%20Taba%20JayaGane.mpeg" },
   { id: 10, title: "Simhastha Sashisekhara", artist: "Devotional", duration: "4:50", src: "/audio/Simhastha%20Sashisekhara.mpeg" },
-  { id: 11, title: "Aham Rudrebhirvasubhischara", artist: "Traditional", duration: "5:10", src: "/audio/Aham%20Rudrebhirvasubhischara.mpeg" },
-  { id: 12, title: "Jatajauta Samayuktam", artist: "Classical Devotional", duration: "6:05", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
+  { id: 11, title: "Aham Rudrebhirvasubhischara", artist: "Krishna Dasgupta", duration: "5:10", src: "/audio/Aham%20Rudrebhirvasubhischara.mpeg" },
+  { id: 12, title: "Jatajauta Samayuktam", artist: "Priyankaa Bhattacharya and Shekharr Srivastav", duration: "6:05", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
 ]
 
 export function RetroRadioPlayer() {
@@ -623,8 +623,8 @@ export function RetroRadioPlayer() {
                   className={`relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg ${isPlaying ? "bg-gradient-to-b from-emerald-600 to-emerald-800" : "bg-gradient-to-b from-gray-600 to-gray-800"} shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]`}
                   onClick={togglePlay}
                 >
-                  <span className={`absolute left-3 landscape:left-2 top-3 landscape:top-2 ${isPlaying ? "text-white" : "text-gray-200"} text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10`}>
-                    RADIO
+                  <span className={`absolute left-3 landscape:left-2.5 top-3 landscape:top-2 ${isPlaying ? "text-white" : "text-gray-200"} text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10`}>
+                    ON
                   </span>
                 </button>
 
