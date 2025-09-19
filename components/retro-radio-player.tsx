@@ -11,15 +11,13 @@ interface Song {
   title: string
   artist: string
   duration: string
+  src: string
 }
 
 const mahalayaSongs: Song[] = [
-  { id: 1, title: "Ya Devi Sarva Bhuteshu", artist: "Birendra Krishna Bhadra", duration: "4:32" },
-  { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15" },
-  { id: 3, title: "Chandipath", artist: "Birendra Krishna Bhadra", duration: "8:45" },
-  { id: 4, title: "Durga Stotram", artist: "Traditional", duration: "5:20" },
-  { id: 5, title: "Aigiri Nandini", artist: "Classical", duration: "7:30" },
-  { id: 6, title: "Sarva Mangala Mangalye", artist: "Devotional", duration: "3:45" },
+  { id: 1, title: "Ya Devi Sarva Bhuteshu", artist: "Birendra Krishna Bhadra", duration: "4:32", src: "/audio/mahalaya-song1.mpeg" },
+  { id: 2, title: "Mahishasura Mardini", artist: "Traditional", duration: "6:15", src: "/audio/mahalaya-song2.mpeg" },
+  { id: 3, title: "Chandipath", artist: "Birendra Krishna Bhadra", duration: "8:45", src: "/audio/mahalaya-song3.mpeg" },
 ]
 
 export function RetroRadioPlayer() {
@@ -32,7 +30,8 @@ export function RetroRadioPlayer() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartAngle, setDragStartAngle] = useState(0)
   const [dragStartRotation, setDragStartRotation] = useState(0)
-  const [currentTime, setCurrentTime] = useState(83) // 1:23 in seconds
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
   const [secondsDisplay, setSecondsDisplay] = useState("00")
   const [isFavorite, setIsFavorite] = useState(false)
   const [isShuffled, setIsShuffled] = useState(false)
@@ -46,6 +45,7 @@ export function RetroRadioPlayer() {
   const volumeKnobRef = useRef<HTMLDivElement>(null)
   const tuningKnobRef = useRef<HTMLDivElement>(null)
   const radioPlayerRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   // Use effect to update screen dimensions and orientation
   useEffect(() => {
@@ -82,19 +82,62 @@ export function RetroRadioPlayer() {
 
   useEffect(() => {
     setKnobRotation(volume[0] * 2.7) // 270 degrees max rotation
+    
+    // Update audio volume
+    if (audioRef.current) {
+      audioRef.current.volume = volume[0] / 100;
+    }
   }, [volume])
   
   // Update seconds display on client-side only
+  // Initialize audio
   useEffect(() => {
-    // Update the seconds every second on the client side only
-    if (typeof window !== 'undefined') {
-      const timer = setInterval(() => {
-        // Increment the time by 1 second, simulating playback
-        setCurrentTime(prevTime => (prevTime + 1) % parseDuration(mahalayaSongs[currentSong].duration))
-      }, 1000)
-      return () => clearInterval(timer)
+    if (audioRef.current) {
+      // Set the initial src
+      audioRef.current.src = mahalayaSongs[currentSong].src;
+      audioRef.current.volume = volume[0] / 100;
+      
+      // Add event listeners
+      const handleTimeUpdate = () => {
+        if (audioRef.current) {
+          setCurrentTime(audioRef.current.currentTime);
+          // Update the seconds display with milliseconds
+          setSecondsDisplay(Math.floor((audioRef.current.currentTime % 1) * 100).toString().padStart(2, '0'));
+        }
+      };
+      
+      const handleDurationChange = () => {
+        if (audioRef.current) {
+          setDuration(audioRef.current.duration);
+        }
+      };
+      
+      const handleEnded = () => {
+        if (repeatMode === 2) { // repeat one
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play();
+          }
+        } else if (repeatMode === 1 || currentSong < mahalayaSongs.length - 1) { // repeat all or has next song
+          nextSong();
+        } else {
+          setIsPlaying(false);
+        }
+      };
+      
+      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
+      audioRef.current.addEventListener('durationchange', handleDurationChange);
+      audioRef.current.addEventListener('ended', handleEnded);
+      
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+          audioRef.current.removeEventListener('durationchange', handleDurationChange);
+          audioRef.current.removeEventListener('ended', handleEnded);
+        }
+      };
     }
-  }, [currentSong])
+  }, [currentSong, repeatMode]);
   
   useEffect(() => {
     // Animate the visualizer bars to match the reference image style
@@ -123,12 +166,29 @@ export function RetroRadioPlayer() {
   }, [tuningKnobRotation, tuning])
 
   useEffect(() => {
-    const stationIndex = Math.floor((tuning[0] / 100) * mahalayaSongs.length)
-    const clampedIndex = Math.min(stationIndex, mahalayaSongs.length - 1)
+    // Calculate the index of the song based on the tuning position
+    // For more precise control, map the entire tuning range to the available songs
+    const songCount = mahalayaSongs.length;
+    const stationIndex = Math.floor((tuning[0] / 100) * songCount);
+    const clampedIndex = Math.min(stationIndex, songCount - 1);
+    
     if (clampedIndex !== currentSong) {
-      setCurrentSong(clampedIndex)
+      setCurrentSong(clampedIndex);
+      
+      // Update audio source when tuning changes
+      if (audioRef.current) {
+        const wasPlaying = !audioRef.current.paused;
+        audioRef.current.src = mahalayaSongs[clampedIndex].src;
+        
+        // Only start playing if it was already playing or in landscape mode during dragging
+        if (wasPlaying || (isLandscape && isDragging && isPlaying)) {
+          audioRef.current.play().catch(error => {
+            console.error("Error playing audio after tuning:", error);
+          });
+        }
+      }
     }
-  }, [tuning, currentSong])
+  }, [tuning, currentSong, isLandscape, isDragging, isPlaying])
 
   const getAngleFromCenter = useCallback((clientX: number, clientY: number, element: HTMLElement) => {
     const rect = element.getBoundingClientRect()
@@ -138,28 +198,117 @@ export function RetroRadioPlayer() {
     return angle + 90 // Adjust so 0 degrees is at the top
   }, [])
 
+  // Define togglePlay function first
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        // Turn off - pause audio
+        audioRef.current.pause();
+      } else {
+        // Turn on - ensure audio source is set before playing
+        if (!audioRef.current.src || audioRef.current.src.endsWith('/')) {
+          audioRef.current.src = mahalayaSongs[currentSong].src;
+        }
+        
+        audioRef.current.play().catch(error => {
+          console.error("Error playing audio:", error);
+          // Handle autoplay policy restrictions gracefully
+        });
+      }
+      setIsPlaying(!isPlaying);
+    }
+  }
+
   const handleTuningMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (!tuningKnobRef.current) return
+      
+      // This flag is to differentiate between a click and a drag
+      let isDragInitiated = false;
+      
       setIsDragging(true)
       const startAngle = getAngleFromCenter(e.clientX, e.clientY, tuningKnobRef.current)
       setDragStartAngle(startAngle)
       setDragStartRotation(tuningKnobRotation)
+      
+      // In landscape mode, set up listeners to detect if this becomes a drag
+      if (isLandscape) {
+        const handleMouseMove = () => {
+          isDragInitiated = true;
+          document.removeEventListener("mousemove", handleMouseMove);
+        };
+        
+        const handleMouseUp = () => {
+          // If no drag occurred, don't do anything (the click event will handle the toggle)
+          // If drag occurred, we need to prevent the click event
+          if (isDragInitiated && e.target instanceof HTMLElement) {
+            e.target.onclick = (e) => {
+              e.stopPropagation();
+              setTimeout(() => {
+                if (e.target instanceof HTMLElement) {
+                  e.target.onclick = null;
+                }
+              }, 100);
+            };
+          }
+          document.removeEventListener("mousemove", handleMouseMove);
+          document.removeEventListener("mouseup", handleMouseUp);
+        };
+        
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+      }
     },
-    [tuningKnobRotation, getAngleFromCenter],
+    [tuningKnobRotation, getAngleFromCenter, isLandscape],
   )
 
   const handleTuningTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (!tuningKnobRef.current) return
       e.preventDefault() // Prevent default to avoid scrolling while dragging
+      
+      // This flag is to differentiate between a tap and a drag
+      let isDragInitiated = false;
+      
       setIsDragging(true)
       const touch = e.touches[0]
       const startAngle = getAngleFromCenter(touch.clientX, touch.clientY, tuningKnobRef.current)
       setDragStartAngle(startAngle)
       setDragStartRotation(tuningKnobRotation)
+      
+      // In landscape mode, set up listeners to detect if this becomes a drag
+      if (isLandscape) {
+        const handleTouchMove = () => {
+          isDragInitiated = true;
+          document.removeEventListener("touchmove", handleTouchMove);
+        };
+        
+        const handleTouchEnd = () => {
+          // If no drag occurred, manually toggle play
+          if (!isDragInitiated && isLandscape) {
+            // We can't reference togglePlay directly in the callback's dependency array,
+            // so we'll use the state values directly
+            if (audioRef.current) {
+              if (isPlaying) {
+                audioRef.current.pause();
+              } else {
+                if (!audioRef.current.src || audioRef.current.src.endsWith('/')) {
+                  audioRef.current.src = mahalayaSongs[currentSong].src;
+                }
+                audioRef.current.play().catch(err => console.error(err));
+              }
+              setIsPlaying(!isPlaying);
+            }
+          }
+          document.removeEventListener("touchmove", handleTouchMove);
+          document.removeEventListener("touchend", handleTouchEnd);
+        };
+        
+        document.addEventListener("touchmove", handleTouchMove);
+        document.addEventListener("touchend", handleTouchEnd);
+      }
     },
-    [tuningKnobRotation, getAngleFromCenter],
+    [tuningKnobRotation, getAngleFromCenter, isLandscape, currentSong, isPlaying],
   )
 
   useEffect(() => {
@@ -212,29 +361,49 @@ export function RetroRadioPlayer() {
     }
   }, [isDragging, dragStartAngle, dragStartRotation, getAngleFromCenter])
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying)
-  }
-
   const nextSong = () => {
-    const nextIndex = (currentSong + 1) % mahalayaSongs.length
-    setCurrentSong(nextIndex)
-    const newTuningValue = (nextIndex / (mahalayaSongs.length - 1)) * 100
-    setTuning([newTuningValue])
-    setTuningKnobRotation((newTuningValue / 100) * 360)
+    const nextIndex = (currentSong + 1) % mahalayaSongs.length;
+    setCurrentSong(nextIndex);
+    const newTuningValue = mahalayaSongs.length > 1 ? 
+      (nextIndex / (mahalayaSongs.length - 1)) * 100 : 50;
+    setTuning([newTuningValue]);
+    setTuningKnobRotation((newTuningValue / 100) * 360);
+    
+    // Update audio source and play if it was already playing
+    if (audioRef.current) {
+      const wasPlaying = !audioRef.current.paused;
+      audioRef.current.src = mahalayaSongs[nextIndex].src;
+      if (wasPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Error playing next song:", error);
+        });
+      }
+    }
   }
 
   const prevSong = () => {
-    const prevIndex = (currentSong - 1 + mahalayaSongs.length) % mahalayaSongs.length
-    setCurrentSong(prevIndex)
-    const newTuningValue = (prevIndex / (mahalayaSongs.length - 1)) * 100
-    setTuning([newTuningValue])
-    setTuningKnobRotation((newTuningValue / 100) * 360)
+    const prevIndex = (currentSong - 1 + mahalayaSongs.length) % mahalayaSongs.length;
+    setCurrentSong(prevIndex);
+    const newTuningValue = mahalayaSongs.length > 1 ? 
+      (prevIndex / (mahalayaSongs.length - 1)) * 100 : 50;
+    setTuning([newTuningValue]);
+    setTuningKnobRotation((newTuningValue / 100) * 360);
+    
+    // Update audio source and play if it was already playing
+    if (audioRef.current) {
+      const wasPlaying = !audioRef.current.paused;
+      audioRef.current.src = mahalayaSongs[prevIndex].src;
+      if (wasPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Error playing previous song:", error);
+        });
+      }
+    }
   }
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
+    const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
@@ -245,6 +414,7 @@ export function RetroRadioPlayer() {
 
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center" ref={radioPlayerRef}>
+      <audio ref={audioRef} preload="metadata" />
       <div className="portrait:block landscape:hidden w-full max-w-md mx-auto">
         <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col items-center justify-evenly relative overflow-hidden safe-area-inset-bottom">
           {/* Top Section - Song Info */}
@@ -437,8 +607,11 @@ export function RetroRadioPlayer() {
             <div className="flex justify-between items-center">
               {/* Left Side - 5 Control Buttons */}
               <div className="flex gap-2 landscape:gap-1 sm:gap-3 md:gap-6">
-                <button className="relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]">
-                  <span className="absolute left-3 landscape:left-2 top-3 landscape:top-2 text-gray-200 text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10">
+                <button 
+                  className={`relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg ${isPlaying ? "bg-gradient-to-b from-emerald-600 to-emerald-800" : "bg-gradient-to-b from-gray-600 to-gray-800"} shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]`}
+                  onClick={togglePlay}
+                >
+                  <span className={`absolute left-3 landscape:left-2 top-3 landscape:top-2 ${isPlaying ? "text-white" : "text-gray-200"} text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10`}>
                     RADIO
                   </span>
                 </button>
@@ -475,6 +648,7 @@ export function RetroRadioPlayer() {
                     ref={tuningKnobRef}
                     className="relative inline-block w-20 landscape:w-16 h-20 landscape:h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none cursor-pointer hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-full before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 active:before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]"
                     style={{ transform: `rotate(${tuningKnobRotation}deg)` }}
+                    onClick={isLandscape ? togglePlay : undefined}
                     onMouseDown={handleTuningMouseDown}
                     onTouchStart={handleTuningTouchStart}
                   >
