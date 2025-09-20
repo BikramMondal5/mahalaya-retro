@@ -15,21 +15,18 @@ interface Song {
 }
 
 const mahalayaSongs: Song[] = [
-  { id: 1, title: "Mahishasura Mardini", artist: "Birendra Krishna Bhadra", duration: "10:30", src: "/audio/Mahishasura Mardini by  Birendra Krishna Bhadra.mp3" },
-  { id: 2, title: "Singhabahini", artist: "Mahalaya Full Event", duration: "9:45", src: "/audio/MAHALAYA 2023.mp3" },
-  { id: 3, title: "Nobopotrikai Debiboron", artist: "Mahalaya Full Event", duration: "8:20", src: "/audio/Nobopotrikai_Debiboron.mp3" },
-  { id: 4, title: "Durga Durgatinashini", artist: "Mahalaya Full Event", duration: "9:30", src: "/audio/Durga Durgatinashini  Mahalaya 2022.mp3" },
-  { id: 5, title: "Namo Chandi", artist: "Bimal Bhushan", duration: "8:45", src: "/audio/Namo%20Chandi.mpeg" },
-  { id: 6, title: "Ya Chandi", artist: "Pankaj Mullick", duration: "4:32", src: "/audio/Ya-chandi.mpeg" },
-  { id: 7, title: "Jago Durga", artist: "Dwijen Mukherjee", duration: "5:20", src: "/audio/Jago-Durga.mpeg" },
-  { id: 8, title: "Tabo Achintya", artist: "Manabendra Mukherjee", duration: "7:30", src: "/audio/Tabo%20Achintya.mpeg" },
-  { id: 9, title: "Bimane Bimane", artist: "Sandhya Mukherjee", duration: "3:45", src: "/audio/Bimane%20Bimane.mpeg" },
-  { id: 10, title: "Bajlo Tomar", artist: "Supriti Ghosh", duration: "6:40", src: "/audio/Bajlo-tomai.mpeg" },
-  { id: 11, title: "Ma Go Taba Beene", artist: "Sumitra Sen", duration: "5:55", src: "/audio/Ma%20Go%20Taba%20Beene.mpeg" },
-  { id: 12, title: "Akhila Bimane Taba Jaya Gane", artist: "Devotional", duration: "7:15", src: "/audio/AkhilaBimane%20Taba%20JayaGane.mpeg" },
-  { id: 13, title: "Simhastha Sashisekhara", artist: "Devotional", duration: "4:50", src: "/audio/Simhastha%20Sashisekhara.mpeg" },
-  { id: 14, title: "Aham Rudrebhirvasubhischara", artist: "Krishna Dasgupta", duration: "5:10", src: "/audio/Aham%20Rudrebhirvasubhischara.mpeg" },
-  { id: 15, title: "Jatajauta Samayuktam", artist: "Priyankaa Bhattacharya and Shekharr Srivastav", duration: "6:05", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
+    { id: 1, title: "Aham Rudrebhirvasubhischara", artist: "Unknown", duration: "--:--", src: "/audio/Aham Rudrebhirvasubhischara.mpeg" },
+    { id: 2, title: "Akhila Bimane Taba Jaya Gane", artist: "Unknown", duration: "--:--", src: "/audio/AkhilaBimane Taba JayaGane.mpeg" },
+    { id: 3, title: "Bajlo Tomai", artist: "Unknown", duration: "--:--", src: "/audio/Bajlo-tomai.mpeg" },
+    { id: 4, title: "Bimane Bimane", artist: "Unknown", duration: "--:--", src: "/audio/Bimane Bimane.mpeg" },
+    { id: 5, title: "Jago Durga", artist: "Unknown", duration: "--:--", src: "/audio/Jago-Durga.mpeg" },
+    { id: 6, title: "JatajutasamayuktamardhendukritaSekharam", artist: "Unknown", duration: "--:--", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
+    { id: 7, title: "Ma Go Taba Beene", artist: "Unknown", duration: "--:--", src: "/audio/Ma Go Taba Beene.mpeg" },
+    { id: 8, title: "Mahisasuramardini", artist: "Unknown", duration: "--:--", src: "/audio/Mahisasuramardini.mpeg" },
+    { id: 9, title: "Namo Chandi", artist: "Unknown", duration: "--:--", src: "/audio/Namo Chandi.mpeg" },
+    { id: 10, title: "Simhastha Sashisekhara", artist: "Unknown", duration: "--:--", src: "/audio/Simhastha Sashisekhara.mpeg" },
+    { id: 11, title: "Tabo Achintya", artist: "Unknown", duration: "--:--", src: "/audio/Tabo Achintya.mpeg" },
+    { id: 12, title: "Ya-chandi", artist: "Unknown", duration: "--:--", src: "/audio/Ya-chandi.mpeg" },
 ]
 
 export function RetroRadioPlayer() {
