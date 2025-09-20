@@ -475,9 +475,9 @@ export function RetroRadioPlayer() {
                   <div className="absolute inset-8 bg-gradient-to-br from-gray-800/30 to-black/50 rounded-full border border-gray-700/30"></div>
                   <div className="absolute inset-16 bg-gradient-to-br from-gray-900/50 to-black/70 rounded-full border border-gray-600/20"></div>
 
-                  {/* Center hole with modern styling */}
-                  <div className="absolute w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-inner border-2 border-emerald-400/30 -z-10">
-                    <div className="w-4 h-4 bg-emerald-800 rounded-full shadow-inner"></div>
+                  {/* Center with orange inner circle */}
+                  <div className="absolute w-36 h-36 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-inner border-2 border-orange-400/30 z-10">
+                    <div className="w-24 h-24 bg-gradient-radial from-orange-400 to-orange-700 rounded-full shadow-inner"></div>
                   </div>
 
                   {/* Modern glass effect */}
