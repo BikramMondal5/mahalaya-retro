@@ -529,23 +529,17 @@ export function RetroRadioPlayer() {
 
               <button
                 onClick={togglePlay}
-                className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex flex-col items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-gray-600/30 relative"
+                className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-emerald-400/30"
               >
                 {isPlaying ? (
-                  <>
-                    <div className="flex gap-2 mb-1">
-                      <div className="w-2 h-8 bg-white rounded-full"></div>
-                      <div className="w-2 h-8 bg-white rounded-full"></div>
-                    </div>
-                    <span className="text-xs text-emerald-400 font-extrabold animate-pulse">ON</span>
-                  </>
+                  <div className="flex gap-2">
+                    <div className="w-2.5 h-10 bg-white rounded-full"></div>
+                    <div className="w-2.5 h-10 bg-white rounded-full"></div>
+                  </div>
                 ) : (
-                  <>
-                    <svg className="w-8 h-8 text-white ml-1.5 mb-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                    <span className="text-xs text-gray-300">OFF</span>
-                  </>
+                  <svg className="w-10 h-10 text-white ml-1.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
                 )}
               </button>
 
