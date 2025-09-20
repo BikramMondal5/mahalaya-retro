@@ -15,21 +15,21 @@ interface Song {
 }
 
 const mahalayaSongs: Song[] = [
-  { id: 1, title: "Aham Rudrebhirvasubhischara", artist: "Unknown", duration: "--:--", src: "/audio/Aham Rudrebhirvasubhischara.mpeg" },
-  { id: 2, title: "Akhila Bimane Taba Jaya Gane", artist: "Unknown", duration: "--:--", src: "/audio/AkhilaBimane Taba JayaGane.mpeg" },
-  { id: 3, title: "Bajlo Tomai", artist: "Unknown", duration: "--:--", src: "/audio/Bajlo-tomai.mpeg" },
-  { id: 4, title: "Bimane Bimane", artist: "Unknown", duration: "--:--", src: "/audio/Bimane Bimane.mpeg" },
-  { id: 5, title: "Durga Durgatinashini", artist: "Mahalaya Full Program", duration: "--:--", src: "/audio/Durga Durgatinashini Mahalaya 2022.mp3" },
-  { id: 6, title: "Jago Durga", artist: "Unknown", duration: "--:--", src: "/audio/Jago-Durga.mpeg" },
-  { id: 7, title: "JatajutasamayuktamardhendukritaSekharam", artist: "Unknown", duration: "--:--", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
-  { id: 8, title: "Ma Go Taba Beene", artist: "Unknown", duration: "--:--", src: "/audio/Ma Go Taba Beene.mpeg" },
-  { id: 9, title: "Singhabahini", artist: "Mahalaya Full Program", duration: "--:--", src: "/audio/MAHALAYA 2023.mp3" },
-  { id: 10, title: "Mahisasuramardini", artist: "Unknown", duration: "--:--", src: "/audio/Mahisasuramardini.mpeg" },
-  { id: 11, title: "Mahishasura Mardini", artist: "Birendra Krishna Bhadra", duration: "--:--", src: "/audio/Mahishasura Mardini by Birendra Krishna Bhadra.mp3" },
-  { id: 12, title: "Namo Chandi", artist: "Unknown", duration: "--:--", src: "/audio/Namo Chandi.mpeg" },
-  { id: 13, title: "Simhastha Sashisekhara", artist: "Unknown", duration: "--:--", src: "/audio/Simhastha Sashisekhara.mpeg" },
-  { id: 14, title: "Tabo Achintya", artist: "Unknown", duration: "--:--", src: "/audio/Tabo Achintya.mpeg" },
-  { id: 15, title: "Ya-chandi", artist: "Unknown", duration: "--:--", src: "/audio/Ya-chandi.mpeg" },
+  { id: 1, title: "Mahishasura Mardini", artist: "Birendra Krishna Bhadra", duration: "--:--", src: "/audio/Mahishasura Mardini by Birendra Krishna Bhadra.mp3" },
+  { id: 2, title: "Durga Durgatinashini", artist: "Mahalaya Full Program", duration: "--:--", src: "/audio/Durga Durgatinashini Mahalaya 2022.mp3" },
+  { id: 3, title: "Singhabahini", artist: "Mahalaya Full Program", duration: "--:--", src: "/audio/MAHALAYA 2023.mp3" },
+  { id: 4, title: "Nobopotrikai Debiboron", artist: "Mahalaya Full Program", duration: "--:--", src: "/audio/Nobopotrikai_Debiboron.mp3" },
+  { id: 5, title: "Aham Rudrebhirvasubhischara", artist: "Pankaj Mullick", duration: "--:--", src: "/audio/Aham Rudrebhirvasubhischara.mpeg" },
+  { id: 6, title: "Akhila Bimane Taba Jaya Gane", artist: "Krishna Dasgupta", duration: "--:--", src: "/audio/AkhilaBimane Taba JayaGane.mpeg" },
+  { id: 7, title: "Bajlo Tomai", artist: "Supriti Ghosh", duration: "--:--", src: "/audio/Bajlo-tomai.mpeg" },
+  { id: 8, title: "Bimane Bimane", artist: "Sandhya Mukherjee", duration: "--:--", src: "/audio/Bimane Bimane.mpeg" },
+  { id: 9, title: "Jago Durga", artist: "Dwijen Mukhopadhyay", duration: "--:--", src: "/audio/Jago-Durga.mpeg" },
+  { id: 10, title: "JatajutasamayuktamardhendukritaSekharam", artist: "Pankaj Mullick", duration: "--:--", src: "/audio/JatajutasamayuktamardhendukritaSekharam.mpeg" },
+  { id: 11, title: "Ma Go Taba Beene", artist: "Sumitra Sen", duration: "--:--", src: "/audio/Ma Go Taba Beene.mpeg" },
+  { id: 12, title: "Simhastha Sashisekhara", artist: "Bimal Bhushan", duration: "--:--", src: "/audio/Simhastha Sashisekhara.mpeg" },
+  { id: 13, title: "Tabo Achintya", artist: "Manabendra Mukhopadhyay", duration: "--:--", src: "/audio/Tabo Achintya.mpeg" },
+  { id: 14, title: "Ya-chandi", artist: "Pankaj Mullick", duration: "--:--", src: "/audio/Ya-chandi.mpeg" },
+  { id: 15, title: "Namo Chandi", artist: "Bimal Bhushan", duration: "--:--", src: "/audio/Namo Chandi.mpeg" },
 ]
 
 export function RetroRadioPlayer() {
