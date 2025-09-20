@@ -16,14 +16,21 @@
 }
 
 /* Marquee animation for the ticker */
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-.animate-marquee {
+.marquee-content {
   display: inline-block;
+  white-space: nowrap;
   animation: marquee 45s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* Pulsing glow animation for the ON button */
