@@ -15,6 +15,28 @@
   padding-left: env(safe-area-inset-left, 0px);
 }
 
+/* Marquee animation for the ticker */
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 45s linear infinite;
+}
+
+/* Pulsing glow animation for the ON button */
+@keyframes pulse-glow {
+  0% { text-shadow: 0 0 5px rgba(52,211,153,0.6); }
+  50% { text-shadow: 0 0 20px rgba(52,211,153,0.9), 0 0 30px rgba(52,211,153,0.5); }
+  100% { text-shadow: 0 0 5px rgba(52,211,153,0.6); }
+}
+
+.animate-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* Extra small screen support */
 @layer utilities {
   .xs\:left-2 {

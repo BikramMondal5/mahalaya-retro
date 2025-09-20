@@ -98,6 +98,8 @@ export function RetroRadioPlayer() {
     }
   }, [volume])
   
+  // No need for ticker message timeout
+  
   // Update seconds display on client-side only
   // Initialize audio
   useEffect(() => {
@@ -451,8 +453,14 @@ export function RetroRadioPlayer() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center" ref={radioPlayerRef}>
-      <audio ref={audioRef} preload="metadata" />
+    <>
+      <div className="fixed top-0 left-0 right-0 z-50 overflow-hidden bg-gradient-to-r from-transparent via-black/30 to-transparent backdrop-blur-sm h-8 flex items-center safe-area-inset-top">
+        <div className="whitespace-nowrap animate-marquee text-white text-sm font-medium tracking-wide">
+          📻 It's an old radio. After changing the station, if your music doesn't play, press the ON button to turn it off, then press it again to turn it on - just like typical Indians :D
+        </div>
+      </div>
+      <div className="w-full h-screen flex flex-col items-center justify-center pt-10" ref={radioPlayerRef}>
+        <audio ref={audioRef} preload="metadata" />
       <div className="portrait:block landscape:hidden w-full max-w-md mx-auto">
         <div className="h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col items-center justify-evenly relative overflow-hidden safe-area-inset-bottom">
           {/* Top Section - Song Info */}
@@ -521,17 +529,23 @@ export function RetroRadioPlayer() {
 
               <button
                 onClick={togglePlay}
-                className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-emerald-400/30"
+                className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex flex-col items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-200 border border-gray-600/30 relative"
               >
                 {isPlaying ? (
-                  <div className="flex gap-2">
-                    <div className="w-2.5 h-10 bg-white rounded-full"></div>
-                    <div className="w-2.5 h-10 bg-white rounded-full"></div>
-                  </div>
+                  <>
+                    <div className="flex gap-2 mb-1">
+                      <div className="w-2 h-8 bg-white rounded-full"></div>
+                      <div className="w-2 h-8 bg-white rounded-full"></div>
+                    </div>
+                    <span className="text-xs text-emerald-400 font-extrabold animate-pulse">ON</span>
+                  </>
                 ) : (
-                  <svg className="w-10 h-10 text-white ml-1.5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  <>
+                    <svg className="w-8 h-8 text-white ml-1.5 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <span className="text-xs text-gray-300">OFF</span>
+                  </>
                 )}
               </button>
 
@@ -620,10 +634,10 @@ export function RetroRadioPlayer() {
               {/* Left Side - 5 Control Buttons */}
               <div className="flex gap-2 landscape:gap-1 sm:gap-3 md:gap-6">
                 <button 
-                  className={`relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg ${isPlaying ? "bg-gradient-to-b from-emerald-600 to-emerald-800" : "bg-gradient-to-b from-gray-600 to-gray-800"} shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]`}
+                  className={`relative inline-block w-14 landscape:w-12 h-12 landscape:h-10 sm:w-16 sm:h-14 md:w-20 md:h-16 rounded-lg bg-gradient-to-b from-gray-600 to-gray-800 shadow-[inset_-8px_0_8px_rgba(0,0,0,0.15),inset_0_-8px_8px_rgba(0,0,0,0.25),0_0_0_2px_rgba(0,0,0,0.75),10px_20px_25px_rgba(0,0,0,0.4)] overflow-hidden transition-all duration-100 ease-in-out select-none hover:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[inset_-4px_0_4px_rgba(0,0,0,0.1),inset_0_-4px_4px_rgba(0,0,0,0.15),0_0_0_2px_rgba(0,0,0,0.5),5px_10px_15px_rgba(0,0,0,0.3)] before:content-[''] before:absolute before:top-1 before:left-1 before:bottom-3.5 before:right-3 before:bg-gradient-to-r before:from-gray-700 before:to-gray-500 before:rounded-lg before:shadow-[-10px_-10px_10px_rgba(255,255,255,0.25),10px_5px_10px_rgba(0,0,0,0.15)] before:border-l before:border-l-black/25 before:border-b before:border-b-black/25 before:border-t before:border-t-black/60 before:transition-all before:duration-100 before:ease-in-out active:before:top-1.5 active:before:left-1.5 active:before:bottom-3 active:before:right-3 before:shadow-[-5px_-5px_5px_rgba(255,255,255,0.15),5px_3px_5px_rgba(0,0,0,0.1)]`}
                   onClick={togglePlay}
                 >
-                  <span className={`absolute left-3 landscape:left-2.5 top-3 landscape:top-2 ${isPlaying ? "text-white" : "text-gray-200"} text-xs landscape:text-[10px] sm:text-sm font-bold transition-transform duration-100 ease-in-out active:translate-y-0.5 z-10`}>
+                  <span className={`absolute left-3 landscape:left-2.5 top-3 landscape:top-2 ${isPlaying ? "text-emerald-400 font-extrabold drop-shadow-[0_0_4px_rgba(52,211,153,0.8)] animate-pulse" : "text-gray-200"} text-xs landscape:text-[10px] sm:text-sm font-bold transition-all duration-200 ease-in-out active:translate-y-0.5 z-10`}>
                     ON
                   </span>
                 </button>
@@ -679,5 +693,6 @@ export function RetroRadioPlayer() {
         </Card>
       </div>
     </div>
+    </>
   )
 }
