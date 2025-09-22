@@ -1,6 +1,6 @@
-# 📻🎧 Mahalaya Retro - "Immerse yourself in the divine vibes of Mahalaya"
+# 📻🎧 Mahalaya Retro - "Back to Childhood, Feel the Nostalgia"
 
-A nostalgic web application designed to bring back memories and take you to the golden era of Mahalaya radio programs.
+A nostalgic web application designed to bring back memories and take you to the golden era of Mahalaya radio programs. Immerse yourself in the divine vibes of Mahalaya.
 
 ## 🌟 Features
 * 🎵 Play Mahalaya audio tracks
