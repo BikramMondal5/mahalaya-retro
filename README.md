@@ -46,7 +46,7 @@ npm run dev
 1. 🎧 Select an audio track from the library.
 2. ▶️ Use the playback controls to play, pause, or change tracks.
 3. 📱 Enjoy the retro-themed experience on any device.
-4. 📱 Rotate your phone: ↔️ Landscape mode for radio and ↕️ Portrait mode for regular use
+4.  Rotate your phone: ↔️ Landscape mode for radio and ↕️ Portrait mode for regular use
 
 ## 🤝 Contribution
 
